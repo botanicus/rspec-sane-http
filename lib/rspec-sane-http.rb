@@ -55,10 +55,14 @@ module HttpApi
         let(:response) do
           if ['GET', 'DELETE'].include?(request_method)
             # puts "~ #{request_method} #{request_path}"
-            HTTP.send(request_method.downcase, url)
+            headers = self.class.metadata[:headers]
+            request = HTTP.with_headers(headers || {})
+            request.send(request_method.downcase, url)
           else
             # puts "~ #{request_method} #{request_path} data: #{self.class.metadata[:data].inspect}"
-            HTTP.send(request_method.downcase, url, body: self.class.metadata[:data])
+            headers = self.class.metadata[:headers]
+            request = HTTP.with_headers(headers || {})
+            request.send(request_method.downcase, url, body: self.class.metadata[:data])
           end
         end
 
