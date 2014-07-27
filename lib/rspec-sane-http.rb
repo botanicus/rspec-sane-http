@@ -70,7 +70,7 @@ module HttpApi
         end
 
         def log(request_method, request_path, headers, data = nil)
-          if true#$DEBUG
+          if $DEBUG
             string = "~ #{request_method} #{request_path}"
             string << " #{headers.inspect}" if headers && ! headers.empty?
             string << " data: #{data.inspect}" if data
