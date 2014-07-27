@@ -54,15 +54,27 @@ module HttpApi
         # Rest client docs: https://github.com/rest-client/rest-client
         let(:response) do
           if ['GET', 'DELETE'].include?(request_method)
-            # puts "~ #{request_method} #{request_path}"
             headers = self.class.metadata[:headers]
             request = HTTP.with_headers(headers || {})
+
+            log(request_method, request_path, headers)
             request.send(request_method.downcase, url)
           else
-            # puts "~ #{request_method} #{request_path} data: #{self.class.metadata[:data].inspect}"
+            data    = self.class.metadata[:data]
             headers = self.class.metadata[:headers]
             request = HTTP.with_headers(headers || {})
-            request.send(request_method.downcase, url, body: self.class.metadata[:data])
+
+            log(request_method, request_path, headers, data)
+            request.send(request_method.downcase, url, body: data)
+          end
+        end
+
+        def log(request_method, request_path, headers, data = nil)
+          if true#$DEBUG
+            string = "~ #{request_method} #{request_path}"
+            string << " #{headers.inspect}" if headers && ! headers.empty?
+            string << " data: #{data.inspect}" if data
+            warn string
           end
         end
 
