@@ -69,6 +69,29 @@ module HttpApi
           end
         end
 
+        def request(request_method, request_path = request_path, headers = {}, data = {})
+          url = [RSpec.configuration.base_url, request_path].join('')
+          request  = HTTP.with_headers(headers)
+          data = data.to_json unless data.is_a?(String) # TODO: Switch to using data as an argument rather than stringified JSON.
+          response = request.send(request_method.downcase, url, body: data)
+          log(request_method, request_path, headers, data)
+
+          JSON.parse(response.body.readpartial)
+        end
+
+        # data = POST('/posts', {Authorization: '...'}, {'title': ...})
+        ['POST', 'PUT'].each do |http_method|
+          define_method(http_method) do |request_path = request_path, headers = {}, body|
+            request(http_method, request_path, headers, body)
+          end
+        end
+
+        ['GET', 'DELETE'].each do |http_method|
+          define_method(http_method) do |request_path = request_path, headers = {}|
+            request(http_method, request_path, headers, nil)
+          end
+        end
+
         def log(request_method, request_path, headers, data = nil)
           if $DEBUG
             string = "~ #{request_method} #{request_path}"
