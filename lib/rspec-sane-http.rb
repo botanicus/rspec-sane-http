@@ -53,6 +53,7 @@ module HttpApi
 
         # Rest client docs: https://github.com/rest-client/rest-client
         let(:response) do
+          p [:metadata, self.class.metadata.keys]
           if ['GET', 'DELETE'].include?(request_method)
             headers = self.class.metadata[:headers]
             request = HTTP.with_headers(headers || {})
@@ -60,7 +61,11 @@ module HttpApi
             log(request_method, request_path, headers)
             request.send(request_method.downcase, url)
           else
-            data    = self.class.metadata[:data]
+            unless self.respond_to?(:request_data)
+              raise "Define request_data using let(:request_data) for #{request_method} to #{url}."
+            end
+
+            data    = self.request_data.to_json
             headers = self.class.metadata[:headers]
             request = HTTP.with_headers(headers || {})
 
@@ -69,9 +74,10 @@ module HttpApi
           end
         end
 
-        def request(request_method, request_path = request_path, headers = {}, data = {})
+        # For manual use only.
+        def request(request_method, request_path = self.request_path, headers = {}, data = {})
           url = [RSpec.configuration.base_url, request_path].join('')
-          request  = HTTP.with_headers(headers)
+          request = HTTP.with_headers(headers)
           data = data.to_json unless data.is_a?(String) # TODO: Switch to using data as an argument rather than stringified JSON.
           response = request.send(request_method.downcase, url, body: data)
           log(request_method, request_path, headers, data)
@@ -79,15 +85,17 @@ module HttpApi
           JSON.parse(response.body.readpartial)
         end
 
+        # For manual use only.
+
         # data = POST('/posts', {Authorization: '...'}, {'title': ...})
         ['POST', 'PUT'].each do |http_method|
-          define_method(http_method) do |request_path = request_path, headers = {}, body|
+          define_method(http_method) do |request_path = self.request_path, headers = {}, body|
             request(http_method, request_path, headers, body)
           end
         end
 
         ['GET', 'DELETE'].each do |http_method|
-          define_method(http_method) do |request_path = request_path, headers = {}|
+          define_method(http_method) do |request_path = self.request_path, headers = {}|
             request(http_method, request_path, headers, nil)
           end
         end

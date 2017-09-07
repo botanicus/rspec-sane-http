@@ -1,4 +1,6 @@
-#!/opt/rubies/rbx-2.2.6/bin/gem build
+#!/usr/bin/env gem build
+
+require 'date'
 
 Gem::Specification.new do |s|
   s.name              = 'rspec-sane-http'
