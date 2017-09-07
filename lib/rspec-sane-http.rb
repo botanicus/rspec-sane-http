@@ -53,7 +53,6 @@ module HttpApi
 
         # Rest client docs: https://github.com/rest-client/rest-client
         let(:response) do
-          p [:metadata, self.class.metadata.keys]
           if ['GET', 'DELETE'].include?(request_method)
             headers = self.class.metadata[:headers]
             request = HTTP.with_headers(headers || {})
