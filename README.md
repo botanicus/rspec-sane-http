@@ -24,5 +24,15 @@ describe 'POST /sign-up' do
       p response
     end
   end
+
+  context 'with empty data' do
+    let(:raw_request_data) do
+      ''
+    end
+
+    it do
+      p response
+    end
+  end
 end
 ```

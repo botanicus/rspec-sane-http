@@ -16,6 +16,19 @@ module HttpApi
           block.call(self.class.metadata)
         end
 
+        # TODO: Allow override with let(:headers).
+        def default_headers
+          block = Proc.new do |metadata|
+            if metadata[:headers]
+              metadata[:headers]
+            else
+              block.call(metadata[:parent_example_group])
+            end
+          end
+
+          block.call(self.class.metadata)
+        end
+
         def request_method
           self.description.split(' ').first
         end
@@ -60,11 +73,14 @@ module HttpApi
             log(request_method, request_path, headers)
             request.send(request_method.downcase, url)
           else
-            unless self.respond_to?(:request_data)
-              raise "Define request_data using let(:request_data) for #{request_method} to #{url}."
+            if self.respond_to?(:raw_request_data)
+              data = self.raw_request_data
+            elsif self.respond_to?(:request_data)
+              data = self.request_data.to_json
+            else
+              raise "Define request_data using let(:request_data) { ... hash for JSON } or let(:raw_request_data) { ... string } for #{request_method} to #{url}."
             end
 
-            data    = self.request_data.to_json
             headers = self.class.metadata[:headers]
             request = HTTP.with_headers(headers || {})
 
