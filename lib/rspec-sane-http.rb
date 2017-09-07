@@ -27,6 +27,12 @@ module HttpApi
           end
         end
 
+        def default_data
+          description_look_up do |metadata|
+            metadata[:data] if metadata[:data]
+          end
+        end
+
         def request_method
           self.description.split(' ').first
         end
@@ -64,6 +70,10 @@ module HttpApi
 
         # Rest client docs: https://github.com/rest-client/rest-client
         let(:response) do
+          make_request
+        end
+
+        def make_request
           if ['GET', 'DELETE'].include?(request_method)
             headers = self.class.metadata[:headers]
             request = HTTP.with_headers(headers || {})
@@ -75,8 +85,10 @@ module HttpApi
               data = self.raw_request_data
             elsif self.respond_to?(:request_data)
               data = self.request_data.to_json
+            elsif self.default_data
+              data = self.default_data
             else
-              raise "Define request_data using let(:request_data) { ... hash for JSON } or let(:raw_request_data) { ... string } for #{request_method} to #{url}."
+              raise "Define request_data using let(:request_data) { ... hash for JSON } or let(:raw_request_data) { ... string } for #{request_method} to #{url} OR use context blah, data: 'xyz'."
             end
 
             headers = self.class.metadata[:headers]
