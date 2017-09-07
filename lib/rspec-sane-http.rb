@@ -134,11 +134,15 @@ module HttpApi
           end
         end
 
-        # For JSON. Use response.to_s otherwise.
-        let(:response_data) do
+        def parse_response(response)
           JSON.parse(response).reduce(Hash.new) do |buffer, (key, value)|
             buffer.merge(key.to_sym => value)
           end
+        end
+
+        # For JSON. Use response.to_s otherwise.
+        let(:response_data) do
+          parse_response(response)
         end
       end
     end
