@@ -4,29 +4,27 @@ module HttpApi
   module Extensions
     def self.extended(base)
       base.class_eval do
-        def description
-          block = Proc.new do |metadata|
-            if metadata[:description].match(/^(GET|POST|PUT|DELETE|OPTIONS|PATCH) (.+)$/)
-              metadata[:description]
-            else
-              block.call(metadata[:parent_example_group])
-            end
+        def description_look_up(&block)
+          look_up_proc = Proc.new do |metadata|
+            block.call(metadata) || block.call(metadata[:parent_example_group])
           end
 
-          block.call(self.class.metadata)
+          look_up_proc.call(self.class.metadata)
+        end
+
+        def description
+          description_look_up do |metadata|
+            if metadata[:description].match(/^(GET|POST|PUT|DELETE|OPTIONS|PATCH) (.+)$/)
+              metadata[:description]
+            end
+          end
         end
 
         # TODO: Allow override with let(:headers).
         def default_headers
-          block = Proc.new do |metadata|
-            if metadata[:headers]
-              metadata[:headers]
-            else
-              block.call(metadata[:parent_example_group])
-            end
+          description_look_up do |metadata|
+            metadata[:headers] if metadata[:headers]
           end
-
-          block.call(self.class.metadata)
         end
 
         def request_method
@@ -119,20 +117,16 @@ module HttpApi
           if $DEBUG
             string = "~ #{request_method} #{request_path}"
             string << " #{headers.inspect}" if headers && ! headers.empty?
-            string << " data: #{data.inspect}" if data
+            string << " data: #{data}" if data
             warn string
           end
         end
 
+        # For JSON. Use response.to_s otherwise.
         let(:response_data) do
-          data = JSON.parse(response).reduce(Hash.new) do |buffer, (key, value)|
+          JSON.parse(response).reduce(Hash.new) do |buffer, (key, value)|
             buffer.merge(key.to_sym => value)
           end
-
-          puts "Code: #{response.code}"
-          puts "Data: #{data.inspect}"
-
-          data
         end
       end
     end
