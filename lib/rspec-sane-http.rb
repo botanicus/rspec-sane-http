@@ -94,7 +94,7 @@ module HttpApi
             end
 
             headers = self.class.metadata[:headers]
-            request = HTTP.with_headers(headers || {})
+            request = HTTP.headers(headers || {})
 
             log(request_method, request_path, headers, data)
             request.send(request_method.downcase, url, body: data)
@@ -104,7 +104,7 @@ module HttpApi
         # For manual use only.
         def request(request_method, request_path = self.request_path, headers = {}, data = {})
           url = [RSpec.configuration.base_url, request_path].join('')
-          request = HTTP.with_headers(headers)
+          request = HTTP.headers(headers)
           data = data.to_json unless data.is_a?(String) # TODO: Switch to using data as an argument rather than stringified JSON.
           response = request.send(request_method.downcase, url, body: data)
           log(request_method, request_path, headers, data)
