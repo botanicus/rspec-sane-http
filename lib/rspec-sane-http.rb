@@ -78,7 +78,7 @@ module HttpApi
         def make_request
           if ['GET', 'DELETE'].include?(request_method)
             headers = self.class.metadata[:headers]
-            request = HTTP.with_headers(headers || {})
+            request = HTTP.headers(headers || {})
 
             log(request_method, request_path, headers)
             request.send(request_method.downcase, url)
